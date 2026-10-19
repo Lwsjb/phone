@@ -80,7 +80,7 @@
   <div class="swatches" id="swatches"></div>
   <div class="hint">拖动旋转 · 滚轮缩放 · 右键平移</div>
 </div>
-<div id="loading">正在构建 1:1 高清模型...</div>
+<div id="loading">正在加载真实光影引擎...</div>
 
 <script type="importmap">
 {
@@ -133,31 +133,29 @@ function makePlate(w, h, r, thickness, bevel = 0.015) {
   return geo;
 }
 
-/* ===================== 材质系统 ===================== */
+/* ===================== 材质系统（极致高光） ===================== */
 const MAT = {
-  // 边框金属
-  frame: new THREE.MeshPhysicalMaterial({ color: 0x3c3f45, metalness: 1.0, roughness: 0.15, clearcoat: 1.0, envMapIntensity: 2.0 }),
-  // 后盖玻璃（为了质感，metalness 略高，roughness 极低，产生强烈高光带）
-  backGlass: new THREE.MeshPhysicalMaterial({ color: 0xf2f2f2, metalness: 0.6, roughness: 0.02, clearcoat: 1.0, clearcoatRoughness: 0.01, envMapIntensity: 2.5 }),
-  // 正面玻璃
-  frontGlass: new THREE.MeshPhysicalMaterial({ color: 0x050505, metalness: 0.1, roughness: 0.01, clearcoat: 1.0, envMapIntensity: 2.0 }),
-  // 屏幕显示区
-  display: new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.01, clearcoat: 1.0, envMapIntensity: 3.0 }),
-  // 极其耀眼的银色金属圈（镜头圈）
-  lensRing: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.05, clearcoat: 1.0, envMapIntensity: 4.0 }),
-  // 深邃的蓝紫反光玻璃镜片
-  lensGlass: new THREE.MeshPhysicalMaterial({ color: 0x070912, metalness: 0.8, roughness: 0.01, clearcoat: 1.0, envMapIntensity: 5.0 }),
-  // 黑色底座/开孔
-  dark: new THREE.MeshPhysicalMaterial({ color: 0x010101, metalness: 0.2, roughness: 0.6 }),
-  // 右侧灰色副摄/闪光灯/传感器
-  greySensor: new THREE.MeshPhysicalMaterial({ color: 0x888888, metalness: 1.0, roughness: 0.2, envMapIntensity: 1.5 }),
-  // 左侧长条白色传感器
-  whiteSensor: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0.1, roughness: 0.1, clearcoat: 1.0 })
+  // 中框（高亮金属）
+  frame: new THREE.MeshPhysicalMaterial({ color: 0x3c3f45, metalness: 1.0, roughness: 0.1, envMapIntensity: 2.5 }),
+  // 后盖（极高反射玻璃，还原图里的斜切光影）
+  backGlass: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0.7, roughness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.02, envMapIntensity: 3.0 }),
+  // 正面屏幕黑玻璃
+  frontGlass: new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.1, roughness: 0.02, clearcoat: 1.0, envMapIntensity: 2.0 }),
+  // 摄像头外金属环（用了纯白金属，确保能反射出刺眼的白光）
+  lensRing: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.05, envMapIntensity: 4.0 }),
+  // 主摄镜片（深邃蓝紫反光玻璃）
+  lensGlass: new THREE.MeshPhysicalMaterial({ color: 0x111522, metalness: 0.8, roughness: 0.02, clearcoat: 1.0, envMapIntensity: 5.0 }),
+  // 模组内部黑底座
+  moduleDark: new THREE.MeshPhysicalMaterial({ color: 0x050505, metalness: 0.3, roughness: 0.4 }),
+  // 右侧灰色副摄/闪光灯
+  greySensor: new THREE.MeshPhysicalMaterial({ color: 0xa0a0a0, metalness: 0.9, roughness: 0.15, envMapIntensity: 2.0 }),
+  // 左侧小白条闪光灯
+  whiteSensor: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.1, clearcoat: 1.0, emissive: 0x222222 })
 };
 
 /* ===================== 颜色方案 ===================== */
 const COLORS = [
-  { name: '极光白', frame: 0xd8d8d8, back: 0xf5f5f5, ui: 'linear-gradient(145deg,#fff,#d0d0d0)' },
+  { name: '极光白', frame: 0xd8d8d8, back: 0xffffff, ui: 'linear-gradient(145deg,#fff,#d0d0d0)' },
   { name: '深海蓝', frame: 0x2a4165, back: 0x0e1a30, ui: 'linear-gradient(145deg,#2a4165,#0a1120)' },
   { name: '星空黑', frame: 0x1a1a1a, back: 0x000000, ui: 'linear-gradient(145deg,#333,#000)' },
   { name: '钛金',   frame: 0xc0b5a0, back: 0xdcd2c0, ui: 'linear-gradient(145deg,#e0d5c0,#a09080)' },
@@ -174,67 +172,55 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-// 使用极高对比度的渲染，完美还原棚拍效果
+// 使用 ACES 色调映射，对比度高，金属质感极强
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 1.2;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-// 干净的纯黑高级灰背景
-(function buildBackground() {
-  const c = document.createElement('canvas'); c.width = 4; c.height = 512;
-  const ctx = c.getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, 0, 512);
-  grad.addColorStop(0.00, '#1a1a1a'); grad.addColorStop(0.5, '#0a0a0a'); grad.addColorStop(1.0, '#000000');
-  ctx.fillStyle = grad; ctx.fillRect(0, 0, 4, 512);
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = tex;
-})();
+// 纯黑背景，衬托手机的高光
+scene.background = new THREE.Color(0x0a0a0c);
 
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 500);
-// 默认视角：略微侧倾，与图二展示效果一致
-const CAM_START = new THREE.Vector3(6, 4, 30);
+const CAM_START = new THREE.Vector3(8, 5, 28);
 camera.position.copy(CAM_START);
 
-// 环境贴图
+// 环境贴图：使用室内棚拍环境，制造极致的反射
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
-const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
+const envRT = pmrem.fromScene(new RoomEnvironment(), 0.02);
 scene.environment = envRT.texture;
 
-/* ===================== 专业摄影棚光影 ===================== */
+/* ===================== 终极补光策略 ===================== */
 function buildLights() {
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x111111, 0.6));
-  
-  // 主光（右上方，打亮后盖玻璃和镜头环）
-  const key = new THREE.DirectionalLight(0xffffff, 4.0);
-  key.position.set(15, 20, 15); 
-  key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048);
-  key.shadow.camera.near = 1; key.shadow.camera.far = 80;
-  key.shadow.camera.left = -15; key.shadow.camera.right = 15;
-  key.shadow.camera.top = 20; key.shadow.camera.bottom = -20;
-  key.shadow.bias = -0.0005;
-  scene.add(key);
+  // 1. 正面主聚光灯（打亮整个模组和机身正面）
+  const spot = new THREE.SpotLight(0xffffff, 15, 100, Math.PI/3, 0.5, 1);
+  spot.position.set(0, 10, 30);
+  spot.castShadow = true;
+  spot.shadow.mapSize.set(2048, 2048);
+  scene.add(spot);
 
-  // 极强侧光（左上方，用于制造后盖斜向的高光和金属环的耀眼白边）
-  const rim = new THREE.DirectionalLight(0xffffff, 8.0);
-  rim.position.set(-20, 15, 5); 
+  // 2. 左上方极强的轮廓光（产生图里那条斜向的白边高光）
+  const rim = new THREE.DirectionalLight(0xffffff, 10.0);
+  rim.position.set(-15, 20, 10); 
   scene.add(rim);
 
-  // 底部补光（消除死黑）
-  const fill = new THREE.DirectionalLight(0xaaccff, 1.0); 
-  fill.position.set(10, -10, 10); 
+  // 3. 右侧冷色补光
+  const fill = new THREE.DirectionalLight(0xaaccff, 3.0); 
+  fill.position.set(15, 5, 10); 
   scene.add(fill);
+
+  // 4. 环境基础光
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x111111, 1.0));
 }
 buildLights();
 
-/* ===================== 手机模型构建 ===================== */
+/* ===================== 手机模型 ===================== */
 const phoneGroup = new THREE.Group();
 scene.add(phoneGroup);
 
-// 1. 中框
+// 中框
 function buildBody() {
   const bevel = 0.1;
   const depth = PHONE_DEPTH - bevel * 2;
@@ -250,7 +236,7 @@ function buildBody() {
   return mesh;
 }
 
-// 2. 后盖
+// 后盖
 function buildBackGlass() {
   const t = 0.1;
   const geo = makePlate(PHONE_WIDTH - 0.1, PHONE_HEIGHT - 0.1, CORNER_RADIUS - 0.05, t, 0.02);
@@ -260,136 +246,107 @@ function buildBackGlass() {
   return mesh;
 }
 
-// 3. 正面屏幕
-function buildScreen() {
-  const g = new THREE.Group();
-  const glassT = 0.06;
-  const glassGeo = makePlate(PHONE_WIDTH - 0.1, PHONE_HEIGHT - 0.1, CORNER_RADIUS - 0.05, glassT, 0.02);
-  const glass = new THREE.Mesh(glassGeo, MAT.frontGlass);
-  glass.position.z = FRONT_Z - glassT/2 + 0.01;
-  g.add(glass);
-
-  const dispT = 0.01;
-  const dispGeo = makePlate(PHONE_WIDTH - 0.28, PHONE_HEIGHT - 0.28, CORNER_RADIUS - 0.14, dispT, 0.002);
-  const disp = new THREE.Mesh(dispGeo, MAT.display);
-  disp.position.z = FRONT_Z + 0.012;
-  g.add(disp);
-
-  // 居中打孔前摄
-  const holeGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.02, 32);
-  holeGeo.rotateX(Math.PI/2);
-  const hole = new THREE.Mesh(holeGeo, MAT.lensGlass);
-  hole.position.set(0, PHONE_HEIGHT/2 - 1.2, FRONT_Z + 0.02);
-  g.add(hole);
-
-  return g;
-}
-
-// 4. 背部：1:1 复刻星环模组
+// 背部超级相机模组
 function buildCameraModule() {
   const g = new THREE.Group();
   
-  // 模组中心坐标
   const M_CY = PHONE_HEIGHT / 2 - 4.5; 
   const M_CX = 0;
-  const MODULE_BACK_Z = BACK_Z - 0.25; // 模组凸起高度
+  const MODULE_BACK_Z = BACK_Z - 0.28; // 凸起高度
 
-  // (1) 外围金属亮环
-  const R_OUT = 3.3;
-  const ringGeo = new THREE.CylinderGeometry(R_OUT, R_OUT, 0.18, 64);
+  // 1. 外圈极亮金属保护环（厚度 0.2）
+  const R_OUT = 3.2;
+  const ringGeo = new THREE.CylinderGeometry(R_OUT, R_OUT, 0.2, 64);
   ringGeo.rotateX(Math.PI / 2);
   const ring = new THREE.Mesh(ringGeo, MAT.lensRing);
-  ring.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.06);
+  ring.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.1);
   ring.castShadow = true;
   g.add(ring);
 
-  // (2) 内部纯黑底座
-  const R_IN = 3.15;
-  const baseGeo = new THREE.CylinderGeometry(R_IN, R_IN, 0.2, 64);
+  // 2. 内部纯黑玻璃底座（厚度 0.18，比外圈略深）
+  const R_IN = 3.0;
+  const baseGeo = new THREE.CylinderGeometry(R_IN, R_IN, 0.18, 64);
   baseGeo.rotateX(Math.PI / 2);
-  const base = new THREE.Mesh(baseGeo, MAT.dark);
-  base.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.02);
+  const base = new THREE.Mesh(baseGeo, MAT.moduleDark);
+  base.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.08);
   g.add(base);
 
-  // --- 左侧：两颗主摄（带有极亮金属环） ---
+  // --- 左侧大主摄（带超亮白圈） ---
   function makeBigLens(ox, oy) {
     const lens = new THREE.Group();
-    // 金属亮圈
-    const ringGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.1, 48);
-    ringGeo.rotateX(Math.PI/2);
-    const ring = new THREE.Mesh(ringGeo, MAT.lensRing);
-    ring.position.z = MODULE_BACK_Z - 0.02;
-    lens.add(ring);
+    // 金属圈
+    const rGeo = new THREE.CylinderGeometry(0.82, 0.82, 0.12, 48);
+    rGeo.rotateX(Math.PI/2);
+    const r = new THREE.Mesh(rGeo, MAT.lensRing);
+    r.position.z = MODULE_BACK_Z + 0.02;
+    lens.add(r);
     // 黑色镜筒
-    const barrelGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.12, 48);
-    barrelGeo.rotateX(Math.PI/2);
-    const barrel = new THREE.Mesh(barrelGeo, MAT.dark);
-    barrel.position.z = MODULE_BACK_Z - 0.03;
-    lens.add(barrel);
-    // 蓝紫反光镜片
-    const glassGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.06, 48);
-    glassGeo.rotateX(Math.PI/2);
-    const glass = new THREE.Mesh(glassGeo, MAT.lensGlass);
-    glass.position.z = MODULE_BACK_Z - 0.08;
+    const bGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.14, 48);
+    bGeo.rotateX(Math.PI/2);
+    const b = new THREE.Mesh(bGeo, MAT.moduleDark);
+    b.position.z = MODULE_BACK_Z + 0.01;
+    lens.add(b);
+    // 蓝紫玻璃镜片
+    const gGeo = new THREE.CylinderGeometry(0.58, 0.58, 0.08, 48);
+    gGeo.rotateX(Math.PI/2);
+    const glass = new THREE.Mesh(gGeo, MAT.lensGlass);
+    glass.position.z = MODULE_BACK_Z - 0.04;
     lens.add(glass);
 
     lens.position.set(M_CX + ox, M_CY + oy, 0);
     return lens;
   }
-  // 左上、左下主摄
   g.add(makeBigLens(-1.2,  1.2));
   g.add(makeBigLens(-1.2, -1.2));
 
-  // --- 右侧：两颗灰色副摄 ---
+  // --- 右侧小副摄（灰色） ---
   function makeSmallLens(ox, oy) {
     const lens = new THREE.Group();
-    const ringGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.08, 32);
-    ringGeo.rotateX(Math.PI/2);
-    const ring = new THREE.Mesh(ringGeo, MAT.greySensor);
-    ring.position.z = MODULE_BACK_Z - 0.02;
-    lens.add(ring);
+    const rGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.1, 32);
+    rGeo.rotateX(Math.PI/2);
+    const r = new THREE.Mesh(rGeo, MAT.greySensor);
+    r.position.z = MODULE_BACK_Z + 0.02;
+    lens.add(r);
     
-    const barrelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 32);
-    barrelGeo.rotateX(Math.PI/2);
-    const barrel = new THREE.Mesh(barrelGeo, MAT.dark);
-    barrel.position.z = MODULE_BACK_Z - 0.03;
-    lens.add(barrel);
+    const bGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.12, 32);
+    bGeo.rotateX(Math.PI/2);
+    const b = new THREE.Mesh(bGeo, MAT.moduleDark);
+    b.position.z = MODULE_BACK_Z + 0.01;
+    lens.add(b);
 
     lens.position.set(M_CX + ox, M_CY + oy, 0);
     return lens;
   }
-  // 右上、右下副摄
   g.add(makeSmallLens(1.4,  1.1));
   g.add(makeSmallLens(1.4, -1.1));
 
-  // --- 右侧：中间矩形闪光灯 ---
+  // --- 右侧中间矩形闪光灯 ---
   const flashGeo = new RoundedBoxGeometry(0.5, 0.25, 0.05, 2, 0.05);
   const flash = new THREE.Mesh(flashGeo, MAT.greySensor);
-  flash.position.set(M_CX + 1.4, M_CY, MODULE_BACK_Z - 0.02);
+  flash.position.set(M_CX + 1.4, M_CY, MODULE_BACK_Z + 0.02);
   g.add(flash);
 
-  // --- 模组内部左上角的传感器细节 ---
-  const sensorBar1 = new RoundedBoxGeometry(0.15, 0.4, 0.02, 2, 0.02);
-  const s1 = new THREE.Mesh(sensorBar1, MAT.dark);
-  s1.position.set(M_CX - 0.2, M_CY + 1.4, MODULE_BACK_Z - 0.01);
+  // --- 内部左上角传感器细节 ---
+  const s1Geo = new RoundedBoxGeometry(0.15, 0.4, 0.02, 2, 0.02);
+  const s1 = new THREE.Mesh(s1Geo, MAT.moduleDark);
+  s1.position.set(M_CX - 0.2, M_CY + 1.4, MODULE_BACK_Z + 0.08);
   g.add(s1);
 
-  const sensorBar2 = new RoundedBoxGeometry(0.4, 0.15, 0.02, 2, 0.02);
-  const s2 = new THREE.Mesh(sensorBar2, MAT.dark);
-  s2.position.set(M_CX + 0.2, M_CY + 1.4, MODULE_BACK_Z - 0.01);
+  const s2Geo = new RoundedBoxGeometry(0.4, 0.15, 0.02, 2, 0.02);
+  const s2 = new THREE.Mesh(s2Geo, MAT.moduleDark);
+  s2.position.set(M_CX + 0.2, M_CY + 1.4, MODULE_BACK_Z + 0.08);
   g.add(s2);
 
-  // --- 【重点】左侧圆环外的小白条闪光灯（原图左下角） ---
+  // --- 【核心细节】左下角的竖条白灯 ---
   const outerFlashGeo = new RoundedBoxGeometry(0.18, 0.65, 0.06, 3, 0.09);
   const outerFlash = new THREE.Mesh(outerFlashGeo, MAT.whiteSensor);
-  // 放在圆环左下方边缘
-  outerFlash.position.set(M_CX - 3.2, M_CY - 1.4, MODULE_BACK_Z + 0.08);
+  outerFlash.position.set(M_CX - 2.9, M_CY - 1.4, MODULE_BACK_Z + 0.15);
   g.add(outerFlash);
 
   return g;
 }
 
-// 5. 按键
+// 按键
 function buildButtons() {
   const g = new THREE.Group();
   const SIDE_X = PHONE_WIDTH/2 - 0.01;
@@ -407,25 +364,18 @@ function buildButtons() {
   return g;
 }
 
-// 6. 底部接口
+// 接口
 function buildPorts() {
   const g = new THREE.Group();
   const BOTTOM_Y = -PHONE_HEIGHT/2;
-
   const portGeo = new RoundedBoxGeometry(1.15, 0.06, 0.44, 3, 0.025);
-  const port = new THREE.Mesh(portGeo, MAT.dark);
+  const port = new THREE.Mesh(portGeo, MAT.moduleDark);
   port.position.set(0, BOTTOM_Y + 0.03, 0); g.add(port);
-
-  const tongueGeo = new RoundedBoxGeometry(0.86, 0.035, 0.26, 2, 0.012);
-  const tongue = new THREE.Mesh(tongueGeo, MAT.frame);
-  tongue.position.set(0, BOTTOM_Y + 0.028, 0); g.add(tongue);
-
   return g;
 }
 
 phoneGroup.add(buildBody());
 phoneGroup.add(buildBackGlass());
-phoneGroup.add(buildScreen());
 phoneGroup.add(buildCameraModule());
 phoneGroup.add(buildButtons());
 phoneGroup.add(buildPorts());
@@ -447,11 +397,9 @@ buildStage();
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.minDistance = 4;
+controls.minDistance = 5;
 controls.maxDistance = 80;
 controls.target.set(0, 0, 0);
-controls.maxPolarAngle = Math.PI * 0.85;
-controls.minPolarAngle = Math.PI * 0.1;
 controls.update();
 
 let autoRotate = false;
@@ -499,14 +447,12 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
 
-  // 颜色平滑过渡
   const k = 1 - Math.pow(0.001, dt);
   curFrame.lerp(tgtFrame, k);
   curBack.lerp(tgtBack, k);
   MAT.frame.color.copy(curFrame);
   MAT.backGlass.color.copy(curBack);
 
-  // 重置镜头动画
   if (camAnim) {
     camAnim.t = Math.min(1, camAnim.t + dt * 2.0);
     const e = 1 - Math.pow(1 - camAnim.t, 3);
