@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>AURA · Phone — 3D 产品展示</title>
+<title>StarWay 15 Ultra · 3D 展示</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     width: 100%; height: 100%; overflow: hidden; background: #08090c;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-                 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   canvas { display: block; }
@@ -18,36 +17,31 @@
     position: absolute; top: 30px; left: 34px;
     color: rgba(255,255,255,0.92); user-select: none;
   }
-  .brand h1 { font-size: 17px; font-weight: 500; letter-spacing: 0.42em; text-indent: 0.42em; }
-  .brand p { margin-top: 7px; font-size: 10.5px; letter-spacing: 0.22em; color: rgba(255,255,255,0.36); }
+  .brand h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.15em; }
+  .brand p { margin-top: 6px; font-size: 11px; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
   .toolbar { position: absolute; top: 26px; right: 26px; display: flex; gap: 10px; }
   .toolbar button {
     width: 46px; height: 46px; border-radius: 15px;
     background: rgba(255,255,255,0.065); border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(20px) saturate(1.7); -webkit-backdrop-filter: blur(20px) saturate(1.7);
-    color: rgba(255,255,255,0.82); font-size: 19px; line-height: 1;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    color: rgba(255,255,255,0.82); font-size: 19px;
     cursor: pointer; pointer-events: auto;
     display: flex; align-items: center; justify-content: center;
-    transition: background .25s ease, transform .25s ease, border-color .25s ease, box-shadow .25s ease;
-    -webkit-tap-highlight-color: transparent;
+    transition: all .25s ease; -webkit-tap-highlight-color: transparent;
   }
   .toolbar button:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
-  .toolbar button:active { transform: translateY(0) scale(0.96); }
-  .toolbar button.active {
-    background: rgba(110,175,255,0.26); border-color: rgba(130,190,255,0.55);
-    color: #fff; box-shadow: 0 0 22px rgba(90,160,255,0.28);
-  }
+  .toolbar button.active { background: rgba(110,175,255,0.26); border-color: rgba(130,190,255,0.55); color: #fff; }
   .swatches {
     position: absolute; bottom: 38px; left: 50%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 15px; padding: 13px 22px;
     border-radius: 999px; background: rgba(255,255,255,0.055);
     border: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(22px) saturate(1.7); -webkit-backdrop-filter: blur(22px) saturate(1.7);
+    backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
     pointer-events: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.45);
   }
   .swatch {
     width: 30px; height: 30px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.22); cursor: pointer; position: relative;
+    border: 2px solid rgba(255,255,255,0.22); cursor: pointer;
     transition: transform .24s cubic-bezier(.34,1.56,.64,1), box-shadow .24s ease;
     -webkit-tap-highlight-color: transparent;
     box-shadow: inset 0 -3px 8px rgba(0,0,0,0.35), inset 0 3px 7px rgba(255,255,255,0.35);
@@ -69,19 +63,16 @@
   }
   #loading.hide { opacity: 0; pointer-events: none; }
   @media (max-width: 720px) {
-    .brand { top: 20px; left: 20px; }
-    .brand h1 { font-size: 14px; } .brand p { font-size: 9px; }
-    .toolbar { top: 16px; right: 16px; gap: 8px; }
-    .toolbar button { width: 42px; height: 42px; border-radius: 13px; font-size: 17px; }
-    .swatches { bottom: 52px; gap: 12px; padding: 11px 17px; }
-    .swatch { width: 26px; height: 26px; }
+    .brand { top: 20px; left: 20px; } .brand h1 { font-size: 15px; }
+    .toolbar { top: 16px; right: 16px; gap: 8px; } .toolbar button { width: 42px; height: 42px; font-size: 17px; }
+    .swatches { bottom: 52px; gap: 12px; padding: 11px 17px; } .swatch { width: 26px; height: 26px; }
     .hint { bottom: 22px; font-size: 9.5px; }
   }
 </style>
 </head>
 <body>
 <div id="hud">
-  <div class="brand"><h1>AURA</h1><p>PHONE · 3D VIEWER</p></div>
+  <div class="brand"><h1>StarWay 15 Ultra</h1><p>3D PRODUCT VIEWER</p></div>
   <div class="toolbar">
     <button id="btnReset" title="重置视角">⟲</button>
     <button id="btnRotate" title="自动旋转">⟳</button>
@@ -107,10 +98,10 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { RoomEnvironment }    from 'three/addons/environments/RoomEnvironment.js';
 
 /* ===================== 参数区 ===================== */
-const PHONE_WIDTH   = 7.4;
-const PHONE_HEIGHT  = 15.6;
-const PHONE_DEPTH   = 0.82;
-const CORNER_RADIUS = 1.05;
+const PHONE_WIDTH   = 7.6;    // 稍宽一点，符合旗舰影像机身
+const PHONE_HEIGHT  = 16.2;
+const PHONE_DEPTH   = 0.85;
+const CORNER_RADIUS = 1.0;
 const FRONT_Z =  PHONE_DEPTH / 2;
 const BACK_Z  = -PHONE_DEPTH / 2;
 
@@ -136,7 +127,7 @@ function makePlate(w, h, r, thickness, bevel = 0.015) {
   const depth = Math.max(thickness - 2*bt, 0.001);
   const geo = new THREE.ExtrudeGeometry(shape, {
     depth, bevelEnabled: true, bevelThickness: bt, bevelSize: bt,
-    bevelSegments: 2, curveSegments: 28
+    bevelSegments: 2, curveSegments: 32
   });
   geo.translate(0, 0, -depth/2);
   geo.computeVertexNormals();
@@ -145,22 +136,34 @@ function makePlate(w, h, r, thickness, bevel = 0.015) {
 
 /* ===================== 材质 ===================== */
 const MAT = {
-  frame: new THREE.MeshPhysicalMaterial({ color: 0x3c3f45, metalness: 1.0, roughness: 0.22, clearcoat: 0.4, clearcoatRoughness: 0.28, envMapIntensity: 1.25 }),
-  backGlass: new THREE.MeshPhysicalMaterial({ color: 0x1c1f24, metalness: 0.55, roughness: 0.36, clearcoat: 1.0, clearcoatRoughness: 0.1, envMapIntensity: 1.05 }),
+  // 中框（金属）
+  frame: new THREE.MeshPhysicalMaterial({ color: 0x3c3f45, metalness: 1.0, roughness: 0.2, clearcoat: 0.3, envMapIntensity: 1.3 }),
+  // 后盖（高反光玻璃）
+  backGlass: new THREE.MeshPhysicalMaterial({ color: 0x1c1f24, metalness: 0.4, roughness: 0.15, clearcoat: 1.0, clearcoatRoughness: 0.05, envMapIntensity: 1.6 }),
+  // 正面玻璃
   frontGlass: new THREE.MeshPhysicalMaterial({ color: 0x0a0b0e, metalness: 0.25, roughness: 0.045, clearcoat: 1.0, clearcoatRoughness: 0.02, envMapIntensity: 1.5 }),
-  display: new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.03, clearcoat: 1.0, clearcoatRoughness: 0.015, envMapIntensity: 1.9 }),
-  lensRing: new THREE.MeshPhysicalMaterial({ color: 0x2b2e34, metalness: 1.0, roughness: 0.16, clearcoat: 0.5, clearcoatRoughness: 0.2, envMapIntensity: 1.3 }),
-  lensGlass: new THREE.MeshPhysicalMaterial({ color: 0x05070b, metalness: 0.0, roughness: 0.015, clearcoat: 1.0, clearcoatRoughness: 0.0, envMapIntensity: 2.4, ior: 1.85, reflectivity: 1.0 }),
-  dark: new THREE.MeshPhysicalMaterial({ color: 0x08090b, metalness: 0.25, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.5 }),
-  flash: new THREE.MeshPhysicalMaterial({ color: 0xfff3dd, emissive: 0x3a2f1e, emissiveIntensity: 0.6, metalness: 0.0, roughness: 0.15, clearcoat: 1.0 })
+  // 屏幕显示面
+  display: new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.0, roughness: 0.03, clearcoat: 1.0, clearcoatRoughness: 0.015, envMapIntensity: 2.0 }),
+  // 摄像头金属圈（亮银高光）
+  lensRing: new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.08, clearcoat: 0.6, envMapIntensity: 2.0 }),
+  // 镜头内部玻璃
+  lensGlass: new THREE.MeshPhysicalMaterial({ color: 0x05070b, metalness: 0.0, roughness: 0.01, clearcoat: 1.0, clearcoatRoughness: 0.0, envMapIntensity: 2.8, ior: 1.9 }),
+  // 黑色开孔/底座
+  dark: new THREE.MeshPhysicalMaterial({ color: 0x060608, metalness: 0.1, roughness: 0.7, clearcoat: 0.2 }),
+  // 黑色玻璃底座（镜头模组内）
+  moduleBase: new THREE.MeshPhysicalMaterial({ color: 0x0a0a0c, metalness: 0.3, roughness: 0.2, clearcoat: 0.8 }),
+  // 传感器/闪光灯
+  sensor: new THREE.MeshPhysicalMaterial({ color: 0x555555, metalness: 0.5, roughness: 0.3 }),
+  flash: new THREE.MeshPhysicalMaterial({ color: 0xfff3dd, emissive: 0x3a2f1e, emissiveIntensity: 0.8, roughness: 0.1 })
 };
 
 /* ===================== 颜色 ===================== */
+// 颜色对齐原图：白色、蓝色、黑色，另外加入金色、玫瑰金
 const COLORS = [
-  { name: '深空黑', frame: 0x3a3d43, back: 0x191b20, ui: 'linear-gradient(145deg,#5a5e66,#22252a)' },
-  { name: '银色',   frame: 0xd3d6db, back: 0xe2e5ea, ui: 'linear-gradient(145deg,#ffffff,#b9bdc4)' },
-  { name: '金色',   frame: 0xd6b586, back: 0xe6d3b0, ui: 'linear-gradient(145deg,#f3ddb8,#c39c6b)' },
-  { name: '深蓝',   frame: 0x2a4165, back: 0x14203a, ui: 'linear-gradient(145deg,#3d5c8c,#132039)' },
+  { name: '星空黑', frame: 0x2a2d34, back: 0x111115, ui: 'linear-gradient(145deg,#444,#111)' },
+  { name: '极光白', frame: 0xd8d8d8, back: 0xf2f2f2, ui: 'linear-gradient(145deg,#fff,#d0d0d0)' },
+  { name: '深海蓝', frame: 0x2a4165, back: 0x13203a, ui: 'linear-gradient(145deg,#2a4165,#0a1120)' },
+  { name: '钛金',   frame: 0xc0b5a0, back: 0xdcd2c0, ui: 'linear-gradient(145deg,#e0d5c0,#a09080)' },
   { name: '玫瑰金', frame: 0xdbaa9d, back: 0xecc5b9, ui: 'linear-gradient(145deg,#f6d3c8,#c48e82)' }
 ];
 const curFrame = new THREE.Color(COLORS[0].frame), tgtFrame = new THREE.Color(COLORS[0].frame);
@@ -175,7 +178,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
@@ -184,16 +187,17 @@ const scene = new THREE.Scene();
   const c = document.createElement('canvas'); c.width = 4; c.height = 512;
   const ctx = c.getContext('2d');
   const grad = ctx.createLinearGradient(0, 0, 0, 512);
-  grad.addColorStop(0.00, '#343a43'); grad.addColorStop(0.42, '#1b1f26'); grad.addColorStop(1.00, '#07080a');
+  grad.addColorStop(0.00, '#2a2e35'); grad.addColorStop(0.45, '#15171b'); grad.addColorStop(1.00, '#050506');
   ctx.fillStyle = grad; ctx.fillRect(0, 0, 4, 512);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
   scene.background = tex;
 })();
 
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 500);
-const CAM_START = new THREE.Vector3(9, 6, 30);
+const CAM_START = new THREE.Vector3(10, 5, 32);
 camera.position.copy(CAM_START);
 
+// 环境贴图（提供真实反光）
 const pmrem = new THREE.PMREMGenerator(renderer);
 pmrem.compileEquirectangularShader();
 const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
@@ -201,18 +205,17 @@ scene.environment = envRT.texture;
 
 /* ===================== 灯光 ===================== */
 function buildLights() {
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1d22, 0.55));
-  const key = new THREE.DirectionalLight(0xffffff, 3.4);
-  key.position.set(14, 24, 18); key.castShadow = true;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1d22, 0.6));
+  const key = new THREE.DirectionalLight(0xffffff, 3.5);
+  key.position.set(15, 25, 20); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
-  key.shadow.camera.near = 1; key.shadow.camera.far = 90;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 100;
   key.shadow.camera.left = -20; key.shadow.camera.right = 20;
   key.shadow.camera.top = 20; key.shadow.camera.bottom = -20;
-  key.shadow.bias = -0.0006; key.shadow.normalBias = 0.02; key.shadow.radius = 4;
+  key.shadow.bias = -0.0005;
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0x9dc4ff, 1.5); fill.position.set(-20, 8, 16); scene.add(fill);
-  const rim = new THREE.DirectionalLight(0xffffff, 2.0); rim.position.set(-8, 12, -24); scene.add(rim);
-  const bounce = new THREE.DirectionalLight(0xffffff, 0.45); bounce.position.set(2, -16, 12); scene.add(bounce);
+  const fill = new THREE.DirectionalLight(0x9dc4ff, 1.8); fill.position.set(-20, 10, 15); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff, 2.5); rim.position.set(-10, 15, -25); scene.add(rim);
 }
 buildLights();
 
@@ -223,12 +226,12 @@ scene.add(phoneGroup);
 /* --- 中框 --- */
 function buildBody() {
   const g = new THREE.Group();
-  const bevel = 0.07;
+  const bevel = 0.08;
   const depth = PHONE_DEPTH - bevel * 2;
   const shape = roundedRectShape(PHONE_WIDTH, PHONE_HEIGHT, CORNER_RADIUS);
   const geo = new THREE.ExtrudeGeometry(shape, {
     depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel,
-    bevelSegments: 3, curveSegments: 30
+    bevelSegments: 3, curveSegments: 32
   });
   geo.translate(0, 0, -depth/2);
   geo.computeVertexNormals();
@@ -241,7 +244,7 @@ function buildBody() {
 /* --- 后盖 --- */
 function buildBackGlass() {
   const g = new THREE.Group();
-  const t = 0.08;
+  const t = 0.1;
   const geo = makePlate(PHONE_WIDTH - 0.16, PHONE_HEIGHT - 0.16, CORNER_RADIUS - 0.08, t, 0.02);
   const mesh = new THREE.Mesh(geo, MAT.backGlass);
   mesh.position.z = BACK_Z + t/2 - 0.005;
@@ -250,7 +253,7 @@ function buildBackGlass() {
   return g;
 }
 
-/* --- 正面：打孔屏（无灵动岛 / 无刘海） --- */
+/* --- 正面屏幕（居中打孔） --- */
 function buildScreen() {
   const g = new THREE.Group();
   const glassT = 0.07;
@@ -259,99 +262,124 @@ function buildScreen() {
   glass.position.z = FRONT_Z - glassT/2 + 0.012;
   g.add(glass);
 
-  // 显示区域（极窄黑边）
+  // 屏幕黑边
   const dispT = 0.012;
-  const dispGeo = makePlate(PHONE_WIDTH - 0.42, PHONE_HEIGHT - 0.42, CORNER_RADIUS - 0.21, dispT, 0.004);
+  const dispGeo = makePlate(PHONE_WIDTH - 0.35, PHONE_HEIGHT - 0.35, CORNER_RADIUS - 0.175, dispT, 0.004);
   const disp = new THREE.Mesh(dispGeo, MAT.display);
   disp.position.z = FRONT_Z + 0.015;
   g.add(disp);
 
-  // 居中单孔前摄（打孔屏）
-  const holeGeo = new THREE.CylinderGeometry(0.17, 0.17, 0.03, 32);
+  // 居中前摄
+  const holeGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.03, 32);
   holeGeo.rotateX(Math.PI/2);
-  const hole = new THREE.Mesh(holeGeo, MAT.dark);
-  hole.position.set(0, PHONE_HEIGHT/2 - 1.15, FRONT_Z + 0.024);
+  const hole = new THREE.Mesh(holeGeo, MAT.lensGlass);
+  hole.position.set(0, PHONE_HEIGHT/2 - 1.2, FRONT_Z + 0.024);
   g.add(hole);
-
-  // 底部指示条（通用条状，不指苹果）
-  const barGeo = makePlate(2.6, 0.14, 0.07, 0.01, 0.003);
-  const bar = new THREE.Mesh(barGeo, MAT.frontGlass);
-  bar.position.set(0, -PHONE_HEIGHT/2 + 0.95, FRONT_Z + 0.023);
-  g.add(bar);
 
   return g;
 }
 
-/* --- 后置摄像头：竖向圆角矩形双摄（更中性，不像 iPhone 三角三摄） --- */
+/* --- 背部：超大星环相机模组（完美还原图片） --- */
 function buildCameraModule() {
   const g = new THREE.Group();
-  const M_W = 2.2, M_H = 4.4, M_R = 0.6;
-  const M_CX = -PHONE_WIDTH/2 + M_W/2 + 0.55;
-  const M_CY =  PHONE_HEIGHT/2 - M_H/2 - 1.05;
-  const MODULE_BACK_Z = BACK_Z - 0.16;
+  
+  // 模组位置：背部偏上居中
+  const M_CY = PHONE_HEIGHT / 2 - 4.2; 
+  const M_CX = 0;
+  const MODULE_BACK_Z = BACK_Z - 0.18; // 模组凸起厚度
 
-  // 金属边框
-  const rimGeo = makePlate(M_W + 0.12, M_H + 0.12, M_R + 0.04, 0.09, 0.02);
-  const rim = new THREE.Mesh(rimGeo, MAT.frame);
-  rim.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.045);
-  rim.castShadow = true;
-  g.add(rim);
+  // 1. 镜头外圈金属环（大圆盘边缘）
+  const R_OUT = 3.0;
+  const ringGeo = new THREE.CylinderGeometry(R_OUT, R_OUT, 0.12, 64);
+  ringGeo.rotateX(Math.PI/2);
+  const ring = new THREE.Mesh(ringGeo, MAT.lensRing);
+  ring.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.04);
+  ring.castShadow = true;
+  g.add(ring);
 
-  // 玻璃底座
-  const baseT = 0.22;
-  const baseGeo = makePlate(M_W, M_H, M_R, baseT, 0.03);
-  const base = new THREE.Mesh(baseGeo, MAT.backGlass);
-  base.position.set(M_CX, M_CY, MODULE_BACK_Z + baseT/2 + 0.02);
-  base.castShadow = true; base.receiveShadow = true;
+  // 2. 黑色玻璃底座
+  const R_IN = 2.85;
+  const baseGeo = new THREE.CylinderGeometry(R_IN, R_IN, 0.15, 64);
+  baseGeo.rotateX(Math.PI/2);
+  const base = new THREE.Mesh(baseGeo, MAT.moduleBase);
+  base.position.set(M_CX, M_CY, MODULE_BACK_Z + 0.02);
   g.add(base);
 
-  // 单个镜头
-  function makeLens(ox, oy) {
+  // 3. 主摄镜头（大）
+  function makeBigLens(ox, oy) {
     const lens = new THREE.Group();
-    const ringGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.14, 48); ringGeo.rotateX(Math.PI/2);
+    const r = 0.85;
+    // 外金属圈
+    const ringGeo = new THREE.CylinderGeometry(r, r, 0.1, 48); ringGeo.rotateX(Math.PI/2);
     const ring = new THREE.Mesh(ringGeo, MAT.lensRing);
-    ring.position.z = MODULE_BACK_Z - 0.05; ring.castShadow = true; lens.add(ring);
-
-    const barrelGeo = new THREE.CylinderGeometry(0.46, 0.46, 0.18, 48); barrelGeo.rotateX(Math.PI/2);
+    ring.position.z = MODULE_BACK_Z - 0.02; lens.add(ring);
+    // 内镜筒
+    const barrelGeo = new THREE.CylinderGeometry(r * 0.8, r * 0.8, 0.15, 48); barrelGeo.rotateX(Math.PI/2);
     const barrel = new THREE.Mesh(barrelGeo, MAT.dark);
-    barrel.position.z = MODULE_BACK_Z - 0.09; lens.add(barrel);
-
-    const glassGeo = new THREE.CylinderGeometry(0.40, 0.40, 0.03, 48); glassGeo.rotateX(Math.PI/2);
+    barrel.position.z = MODULE_BACK_Z - 0.05; lens.add(barrel);
+    // 镜片
+    const glassGeo = new THREE.CylinderGeometry(r * 0.65, r * 0.65, 0.04, 48); glassGeo.rotateX(Math.PI/2);
     const glass = new THREE.Mesh(glassGeo, MAT.lensGlass);
-    glass.position.z = MODULE_BACK_Z - 0.18; lens.add(glass);
+    glass.position.z = MODULE_BACK_Z - 0.12; lens.add(glass);
 
     lens.position.set(M_CX + ox, M_CY + oy, 0);
     return lens;
   }
-  g.add(makeLens(0, 1.05));
-  g.add(makeLens(0, -1.05));
+  // 左上、左下两个大主摄
+  g.add(makeBigLens(-1.2,  1.2));
+  g.add(makeBigLens(-1.2, -1.2));
 
-  // 闪光灯（两摄之间）
-  const flashGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.07, 24); flashGeo.rotateX(Math.PI/2);
+  // 4. 副摄 / 传感器（小）
+  function makeSmallLens(ox, oy) {
+    const lens = new THREE.Group();
+    const r = 0.45;
+    const ringGeo = new THREE.CylinderGeometry(r, r, 0.08, 32); ringGeo.rotateX(Math.PI/2);
+    const ring = new THREE.Mesh(ringGeo, MAT.lensRing);
+    ring.position.z = MODULE_BACK_Z - 0.02; lens.add(ring);
+    
+    const glassGeo = new THREE.CylinderGeometry(r * 0.7, r * 0.7, 0.03, 32); glassGeo.rotateX(Math.PI/2);
+    const glass = new THREE.Mesh(glassGeo, MAT.lensGlass);
+    glass.position.z = MODULE_BACK_Z - 0.08; lens.add(glass);
+
+    lens.position.set(M_CX + ox, M_CY + oy, 0);
+    return lens;
+  }
+  // 右侧两个小镜头
+  g.add(makeSmallLens(1.2,  0.9));
+  g.add(makeSmallLens(1.2, -0.9));
+
+  // 5. 中间横向闪光灯/传感器条
+  const flashGeo = new RoundedBoxGeometry(0.6, 0.25, 0.05, 3, 0.05);
   const flash = new THREE.Mesh(flashGeo, MAT.flash);
-  flash.position.set(M_CX, M_CY, MODULE_BACK_Z - 0.03);
+  flash.position.set(M_CX, M_CY, MODULE_BACK_Z - 0.04);
   g.add(flash);
+
+  // 6. 背部左侧长条传感器（还原图片中的竖条）
+  const sensorBarGeo = new RoundedBoxGeometry(0.15, 0.8, 0.02, 3, 0.05);
+  const sensorBar = new THREE.Mesh(sensorBarGeo, MAT.lensRing);
+  sensorBar.position.set(-PHONE_WIDTH/2 + 0.8, M_CY - 1.5, MODULE_BACK_Z + 0.08);
+  g.add(sensorBar);
 
   return g;
 }
 
-/* --- 侧边按键：安卓风格（右侧电源 + 音量），无静音拨片 --- */
+/* --- 侧边按键（全部在右侧） --- */
 function buildButtons() {
   const g = new THREE.Group();
   const SIDE_X = PHONE_WIDTH/2 - 0.01;
-  const BW = 0.13, BD = 0.38;
+  const BW = 0.14, BD = 0.4;
 
-  // 右侧：电源键
+  // 右侧：音量 +
+  const volUp = new THREE.Mesh(new RoundedBoxGeometry(BW, 1.4, BD, 3, 0.05), MAT.frame);
+  volUp.position.set(SIDE_X, 3.0, 0); volUp.castShadow = true; g.add(volUp);
+
+  // 右侧：音量 -
+  const volDown = new THREE.Mesh(new RoundedBoxGeometry(BW, 1.4, BD, 3, 0.05), MAT.frame);
+  volDown.position.set(SIDE_X, 1.4, 0); volDown.castShadow = true; g.add(volDown);
+
+  // 右侧：电源键（略靠下）
   const power = new THREE.Mesh(new RoundedBoxGeometry(BW, 1.6, BD, 3, 0.05), MAT.frame);
-  power.position.set(SIDE_X, 2.1, 0); power.castShadow = true; g.add(power);
-
-  // 左侧：音量 +
-  const volUp = new THREE.Mesh(new RoundedBoxGeometry(BW, 1.3, BD, 3, 0.05), MAT.frame);
-  volUp.position.set(-SIDE_X, 2.55, 0); volUp.castShadow = true; g.add(volUp);
-
-  // 左侧：音量 -
-  const volDown = new THREE.Mesh(new RoundedBoxGeometry(BW, 1.3, BD, 3, 0.05), MAT.frame);
-  volDown.position.set(-SIDE_X, 1.0, 0); volDown.castShadow = true; g.add(volDown);
+  power.position.set(SIDE_X, -0.8, 0); power.castShadow = true; g.add(power);
 
   return g;
 }
@@ -377,19 +405,15 @@ function buildPorts() {
   for (let side = -1; side <= 1; side += 2) {
     for (let i = 0; i < 6; i++) {
       const hole = new THREE.Mesh(holeGeo, MAT.dark);
-      hole.position.set(side * (0.95 + i * 0.2), BOTTOM_Y + 0.03, 0);
+      hole.position.set(side * (1.0 + i * 0.2), BOTTOM_Y + 0.03, 0);
       g.add(hole);
     }
   }
 
-  // 底部麦克风
-  const micGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.06, 10);
-  const mic = new THREE.Mesh(micGeo, MAT.dark);
-  mic.position.set(-2.45, BOTTOM_Y + 0.03, 0); g.add(mic);
-
   // 顶部麦克风
+  const micGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.06, 10);
   const micTop = new THREE.Mesh(micGeo, MAT.dark);
-  micTop.position.set(1.6, TOP_Y - 0.03, 0); g.add(micTop);
+  micTop.position.set(2.0, TOP_Y - 0.03, 0); g.add(micTop);
 
   return g;
 }
@@ -403,10 +427,9 @@ phoneGroup.add(buildPorts());
 
 /* ===================== 展示台 ===================== */
 function buildStage() {
-  const platformGeo = new THREE.CylinderGeometry(11.5, 12.2, 0.7, 96);
+  const platformGeo = new THREE.CylinderGeometry(12.5, 13.2, 0.7, 96);
   const platformMat = new THREE.MeshPhysicalMaterial({
-    color: 0x14171c, metalness: 0.18, roughness: 0.62,
-    clearcoat: 0.45, clearcoatRoughness: 0.45, envMapIntensity: 0.8
+    color: 0x111318, metalness: 0.2, roughness: 0.5, clearcoat: 0.4, envMapIntensity: 0.8
   });
   const platform = new THREE.Mesh(platformGeo, platformMat);
   platform.position.y = -PHONE_HEIGHT/2 - 0.37;
@@ -418,17 +441,14 @@ buildStage();
 /* ===================== 交互 ===================== */
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.065;
+controls.dampingFactor = 0.06;
 controls.minDistance = 4;
-controls.maxDistance = 70;
+controls.maxDistance = 80;
 controls.target.set(0, 0, 0);
 controls.maxPolarAngle = Math.PI * 0.88;
 controls.minPolarAngle = Math.PI * 0.08;
 controls.rotateSpeed = 0.9;
-controls.zoomSpeed = 0.9;
-controls.panSpeed = 0.8;
-controls.autoRotate = false;
-controls.autoRotateSpeed = 1.0;
+controls.autoRotateSpeed = 1.2;
 controls.update();
 
 let autoRotate = false;
